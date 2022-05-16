@@ -76,7 +76,7 @@ if (BUILD_TEASER_FPFH)
 endif ()
 
 # googletest
-if (NOT TARGET gtest)
+if (NOT TARGET gtest AND BUILD_TESTS)
     configure_file(cmake/GoogleTest.CMakeLists.txt.in googletest-download/CMakeLists.txt)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-download")
