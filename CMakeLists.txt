@@ -34,16 +34,17 @@ endif ()
 
 # Find dependencies
 # Eigen3
-find_package(Eigen3 3.2 QUIET REQUIRED NO_MODULE)
-if (ENABLE_MKL)
-    find_package(MKL)
-    if (MKL_FOUND)
-        message(STATUS "MKL found at: ${MKL_LIBRARIES}")
-        include_directories(${MKL_INCLUDE_DIR})
-        add_definitions(-DEIGEN_USE_MKL_ALL)
-        list(APPEND TEASERPP_BLAS_LAPACK_LIBS ${MKL_LIBRARIES})
-    else ()
-        message(STATUS "MKL not found.")
+if(NOT TARGET eigen)
+    find_package(Eigen3 3.2 QUIET REQUIRED NO_MODULE)
+    if (ENABLE_MKL)
+        find_package(MKL)
+        if (MKL_FOUND)
+            message(STATUS "MKL found at: ${MKL_LIBRARIES}")
+            include_directories(${MKL_INCLUDE_DIR})
+            add_definitions(-DEIGEN_USE_MKL_ALL)
+            list(APPEND TEASERPP_BLAS_LAPACK_LIBS ${MKL_LIBRARIES})
+        else ()
+            message(STATUS "MKL not found.")
     endif ()
 endif ()
 
@@ -51,47 +52,73 @@ if (BUILD_TEASER_FPFH)
     # Boost
     find_package(Boost 1.58 QUIET REQUIRED)
 
-    # PCL
+    # Suppress CMake warnings
+    # see here: https://github.com/PointCloudLibrary/pcl/issues/3680
+    if(NOT DEFINED CMAKE_SUPPRESS_DEVELOPER_WARNINGS)
+        set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "No dev warnings")
+    endif()
     find_package(PCL 1.8 QUIET REQUIRED COMPONENTS common io features kdtree)
+
+    # check for -march=native in PCL compile definitions
+    # get_target_property(PCL_COMPILE_OPTIONS pcl_common INTERFACE_COMPILE_OPTIONS)
+    string(FIND "${PCL_COMPILE_OPTIONS}" "-march=native" PCL_IS_NATIVE)
+    if (NOT PCL_IS_NATIVE EQUAL -1)
+        # Fix Eigen alignment conflicting with pcl issue
+        # See: http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html
+        add_definitions(-DEIGEN_MAX_STATIC_ALIGN_BYTES=0)
+
+        if (NOT BUILD_WITH_MARCH_NATIVE)
+            message (STATUS "PCL built with -march=native. Enable -march=native for TEASER++ as well")
+            set(BUILD_WITH_MARCH_NATIVE ON)
+        endif()
+    endif()
 endif ()
 
 # googletest
-configure_file(cmake/GoogleTest.CMakeLists.txt.in googletest-download/CMakeLists.txt)
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download")
-execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download")
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src"
-        "${CMAKE_BINARY_DIR}/googletest-build")
+if (NOT TARGET gtest)
+    configure_file(cmake/GoogleTest.CMakeLists.txt.in googletest-download/CMakeLists.txt)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/googletest-download")
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/googletest-download")
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    add_subdirectory("${CMAKE_CURRENT_DIR}/googletest-src"
+            "${CMAKE_CURRENT_DIR}/googletest-build")
+endif()
 
 # pmc (Parallel Maximum Clique)
-configure_file(cmake/pmc.CMakeLists.txt.in pmc-download/CMakeLists.txt)
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/pmc-download")
-execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/pmc-download")
-add_subdirectory("${CMAKE_BINARY_DIR}/pmc-src"
-        "${CMAKE_BINARY_DIR}/pmc-build")
+if (NOT TARGET pmc)
+    configure_file(cmake/pmc.CMakeLists.txt.in pmc-download/CMakeLists.txt)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/pmc-download")
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/pmc-download")
+    add_subdirectory("${CMAKE_CURRENT_DIR}/pmc-src"
+            "${CMAKE_CURRENT_DIR}/pmc-build")
+endif()
 
 # tinyply
-configure_file(cmake/tinyply.CMakeLists.txt.in tinyply-download/CMakeLists.txt)
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tinyply-download")
-execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tinyply-download")
-add_subdirectory("${CMAKE_BINARY_DIR}/tinyply-src"
-        "${CMAKE_BINARY_DIR}/tinyply-build")
-target_include_directories(tinyply PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/tinyply-src/source>)
+if (NOT TARGET tinyply)
+    configure_file(cmake/tinyply.CMakeLists.txt.in tinyply-download/CMakeLists.txt)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/tinyply-download")
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/tinyply-download")
+    add_subdirectory("${CMAKE_CURRENT_DIR}/tinyply-src"
+            "${CMAKE_CURRENT_DIR}/tinyply-build")
+    target_include_directories(tinyply PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_DIR}/tinyply-src/source>)
+endif()
 
 # spectra
-configure_file(cmake/spectra.CMakeLists.txt.in spectra-download/CMakeLists.txt)
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/spectra-download")
-execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/spectra-download")
-set(SPECTRA_INCLUDE_DIRS "${CMAKE_BINARY_DIR}/spectra-src/include")
+if (NOT TARGET spectra)
+    configure_file(cmake/spectra.CMakeLists.txt.in spectra-download/CMakeLists.txt)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/spectra-download")
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/spectra-download")
+    set(SPECTRA_INCLUDE_DIRS "${CMAKE_CURRENT_DIR}/spectra-src/include")
+endif()
 
 # Building Targets
 set(TEASERPP_ROOT ${CMAKE_CURRENT_LIST_DIR})
@@ -111,7 +138,7 @@ if (BUILD_MATLAB_BINDINGS)
     add_subdirectory(matlab)
 endif ()
 
-if (BUILD_PYTHON_BINDINGS)
+if (BUILD_PYTHON_BINDINGS AND NOT TARGET pybind11_headers)
     set(PYBIND11_PYTHON_VERSION ${TEASERPP_PYTHON_VERSION})
 
     # download the pybind11 repo
