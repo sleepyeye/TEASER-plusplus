@@ -45,6 +45,7 @@ if(NOT TARGET eigen)
             list(APPEND TEASERPP_BLAS_LAPACK_LIBS ${MKL_LIBRARIES})
         else ()
             message(STATUS "MKL not found.")
+        endif ()
     endif ()
 endif ()
 
