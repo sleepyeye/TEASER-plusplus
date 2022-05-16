@@ -78,46 +78,46 @@ endif ()
 if (NOT TARGET gtest)
     configure_file(cmake/GoogleTest.CMakeLists.txt.in googletest-download/CMakeLists.txt)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/googletest-download")
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-download")
     execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/googletest-download")
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-download")
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    add_subdirectory("${CMAKE_CURRENT_DIR}/googletest-src"
-            "${CMAKE_CURRENT_DIR}/googletest-build")
+    add_subdirectory("${CMAKE_CURRENT_BINARY_DIR}/googletest-src"
+            "${CMAKE_CURRENT_BINARY_DIR}/googletest-build")
 endif()
 
 # pmc (Parallel Maximum Clique)
 if (NOT TARGET pmc)
     configure_file(cmake/pmc.CMakeLists.txt.in pmc-download/CMakeLists.txt)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/pmc-download")
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pmc-download")
     execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/pmc-download")
-    add_subdirectory("${CMAKE_CURRENT_DIR}/pmc-src"
-            "${CMAKE_CURRENT_DIR}/pmc-build")
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pmc-download")
+    add_subdirectory("${CMAKE_CURRENT_BINARY_DIR}/pmc-src"
+            "${CMAKE_CURRENT_BINARY_DIR}/pmc-build")
 endif()
 
 # tinyply
 if (NOT TARGET tinyply)
     configure_file(cmake/tinyply.CMakeLists.txt.in tinyply-download/CMakeLists.txt)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/tinyply-download")
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tinyply-download")
     execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/tinyply-download")
-    add_subdirectory("${CMAKE_CURRENT_DIR}/tinyply-src"
-            "${CMAKE_CURRENT_DIR}/tinyply-build")
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tinyply-download")
+    add_subdirectory("${CMAKE_CURRENT_BINARY_DIR}/tinyply-src"
+            "${CMAKE_CURRENT_BINARY_DIR}/tinyply-build")
     target_include_directories(tinyply PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_DIR}/tinyply-src/source>)
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/tinyply-src/source>)
 endif()
 
 # spectra
 if (NOT TARGET spectra)
     configure_file(cmake/spectra.CMakeLists.txt.in spectra-download/CMakeLists.txt)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/spectra-download")
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/spectra-download")
     execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-            WORKING_DIRECTORY "${CMAKE_CURRENT_DIR}/spectra-download")
-    set(SPECTRA_INCLUDE_DIRS "${CMAKE_CURRENT_DIR}/spectra-src/include")
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/spectra-download")
+    set(SPECTRA_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/spectra-src/include")
 endif()
 
 # Building Targets
@@ -144,11 +144,11 @@ if (BUILD_PYTHON_BINDINGS AND NOT TARGET pybind11_headers)
     # download the pybind11 repo
     configure_file(cmake/pybind11.CMakeLists.txt.in pybind11-download/CMakeLists.txt)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/pybind11-download")
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download")
     execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/pybind11-download")
-    add_subdirectory("${CMAKE_BINARY_DIR}/pybind11-src"
-            "${CMAKE_BINARY_DIR}/pybind11-build")
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download")
+    add_subdirectory("${CMAKE_CURRENT_BINARY_DIR}/pybind11-src"
+            "${CMAKE_CURRENT_BINARY_DIR}/pybind11-build")
 
     message(STATUS "TEASER++ Python binding will be built.")
     add_subdirectory(python)
