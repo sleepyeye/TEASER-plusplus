@@ -98,6 +98,8 @@ if (NOT TARGET pmc)
     execute_process(COMMAND "${CMAKE_COMMAND}" --build .
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pmc-download"
             OUTPUT_QUIET)
+    set(PMC_VERBOSE OFF CACHE BOOL "Make PMC quite" FORCE)
+    set(PMC_WITH_OPENMP OFF CACHE BOOL "Disable OpenMP in PMC" FORCE)
     add_subdirectory("${CMAKE_CURRENT_BINARY_DIR}/pmc-src"
             "${CMAKE_CURRENT_BINARY_DIR}/pmc-build")
 endif()
