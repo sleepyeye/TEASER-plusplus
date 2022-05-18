@@ -33,9 +33,11 @@ target_include_directories(teaser_registration PUBLIC
         $<BUILD_INTERFACE:${SPECTRA_INCLUDE_DIRS}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-find_package(OpenMP)
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(teaser_registration PRIVATE OpenMP::OpenMP_CXX)
+if(ENABLE_OPENMP)
+    find_package(OpenMP)
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries(teaser_registration PRIVATE OpenMP::OpenMP_CXX)
+    endif()
 endif()
 
 install(TARGETS teaser_registration
